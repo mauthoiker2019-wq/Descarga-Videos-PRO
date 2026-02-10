@@ -2,59 +2,62 @@ import streamlit as st
 import yt_dlp
 import os
 
-st.set_page_config(page_title="Descargador Familiar", page_icon="📥")
+st.set_page_config(page_title="Descargador Pro", page_icon="📲")
 
-st.title("📥 Descargador Pro")
-st.write("Versión Ultra-Compatible (YouTube, TikTok, IG)")
+# Estilo para botones grandes en el celular
+st.markdown("""
+    <style>
+    .stButton>button {
+        width: 100%;
+        border-radius: 20px;
+        height: 3.5em;
+        background-color: #FF0000;
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-formato = st.radio("¿Qué quieres?", ["Video", "Música"], horizontal=True)
-url = st.text_input("Pega el link aquí:")
+st.title("📲 Descargador de Videos")
+st.write("Pegá el link de YouTube, TikTok o Instagram abajo.")
+
+url = st.text_input("Enlace del video:", placeholder="https://...")
 
 if st.button("DESCARGAR"):
     if url:
-        with st.spinner("Descargando..."):
-            # Opciones básicas para que no falle el servidor
+        with st.spinner("Descargando... un momento"):
+            # Opciones de descarga directa (formato MP4 único para evitar errores)
             ydl_opts = {
+                'format': 'best[ext=mp4]/best', 
+                'outtmpl': 'video_final.mp4',
                 'nocheckcertificate': True,
-                'outtmpl': 'archivo.%(ext)s',
-                'quiet': True,
+                'quiet': True
             }
 
-            if formato == "Video":
-                # Buscamos un formato mp4 ya combinado para no estresar al servidor
-                ydl_opts['format'] = 'best[ext=mp4]/best'
-            else:
-                ydl_opts['format'] = 'bestaudio/best'
-                ydl_opts['postprocessors'] = [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': '192',
-                }]
-
             try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    # Obtenemos el nombre real del archivo descargado
-                    filename = ydl.prepare_filename(info)
-                    
-                    # Si pedimos MP3, yt-dlp lo renombra al final
-                    if formato == "Música":
-                        filename = os.path.splitext(filename)[0] + ".mp3"
+                # Limpiar descargas anteriores si existen
+                if os.path.exists("video_final.mp4"):
+                    os.remove("video_final.mp4")
 
-                if os.path.exists(filename):
-                    with open(filename, "rb") as f:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url])
+                
+                if os.path.exists("video_final.mp4"):
+                    with open("video_final.mp4", "rb") as file:
                         st.download_button(
-                            label="⬇️ GUARDAR EN CELULAR",
-                            data=f,
-                            file_name=os.path.basename(filename),
-                            mime="video/mp4" if formato == "Video" else "audio/mpeg"
+                            label="⬇️ TOCAR PARA GUARDAR",
+                            data=file,
+                            file_name="video.mp4",
+                            mime="video/mp4"
                         )
-                    os.remove(filename)
                 else:
-                    st.error("El video se procesó pero el archivo no se encontró. Reintenta.")
+                    st.error("No se pudo crear el archivo. Intentá de nuevo.")
+            
             except Exception as e:
-                st.error(f"Error: El servicio de video está saturado. Intenta de nuevo en un minuto.")
+                st.error("El servidor está saturado o el link es incorrecto.")
     else:
-        st.warning("Pega un link primero.")
+        st.warning("Falta el link.")
+
 
 
