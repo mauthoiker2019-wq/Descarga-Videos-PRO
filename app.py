@@ -50,7 +50,18 @@ if st.button("DESCARGAR"):
             time.sleep(2)
 
         # 3. VOLVEMOS A LA NORMALIDAD
-        st.markdown("<style>.stApp { background-color: white !important; color: black !important; }</style>", unsafe_allow_html
+        st.markdown("<style>.stApp { background-color: white !important; color: black !important; }</style>", unsafe_allow_html=True)
+        placeholder.empty()
+        
+        st.balloons() # Tira globos para que sepan que es joda
+        st.success("¡Caíste! Jajaja. Acá tenés tu descarga:")
+        
+        # --- ACÁ VA TU CÓDIGO REAL DE YT-DLP ---
+        # (El mismo que veníamos usando para que el video baje de verdad)
+        st.write("*(Simulando descarga real...)*")
+    else:
+        st.warning("Falta el link, pá.")
+
 
 
 
