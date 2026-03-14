@@ -1,79 +1,61 @@
 import streamlit as st
 import yt_dlp
 import os
-import time
 
-st.set_page_config(page_title="Descargador Oficial", page_icon="📲")
+st.set_page_config(page_title="Descargador & Recortador Profesional", page_icon="✂️")
 
+# Estilos limpios y modernos
 st.markdown("""
     <style>
     .stButton>button {
-        width: 100%; border-radius: 20px; height: 3.5em;
-        background-color: #FF0000; color: white; font-weight: bold;
+        width: 100%; border-radius: 10px; height: 3em;
+        background-color: #4A90E2; color: white; font-weight: bold;
     }
-    .stApp { transition: background-color 0.5s; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📲 Descargador de Videos")
-st.write("Versión 2026 - Anti Bloqueo")
+st.title("✂️ Descargador y Recortador de Video")
+st.write("Analiza el video y descarga solo la parte que necesites.")
 
-url = st.text_input("Pegá el enlace acá:", placeholder="https://...")
+url = st.text_input("Pega el enlace del video (YouTube, TikTok, etc.):", placeholder="https://...")
 
-if st.button("DESCARGAR"):
-    if url:
-        # --- EL SUSTO (No se toca, es sagrado) ---
-        st.markdown("<style>.stApp { background-color: black !important; color: #00ff00 !important; }</style>", unsafe_allow_html=True)
-        info_placeholder = st.empty()
-        with info_placeholder.container():
-            st.markdown("### ⚠️ ALERTA: INTRUSIÓN EN RTX 5070")
-            bar = st.progress(0)
-            for percent in range(100):
-                time.sleep(0.02)
-                bar.progress(percent + 1)
-            st.error("❗ DISPOSITIVO CONTROLADO POR TU HIJO")
-            time.sleep(1.5)
+if url:
+    try:
+        # --- SECCIÓN DE ANÁLISIS ---
+        with st.spinner("Analizando video..."):
+            ydl_opts_info = {'quiet': True, 'no_warnings': True}
+            with yt_dlp.YoutubeDL(ydl_opts_info) as ydl:
+                info = ydl.extract_info(url, download=False)
+                duration = info.get('duration', 0)
+                title = info.get('title', 'Video sin título')
+                thumbnail = info.get('thumbnail')
 
-        st.markdown("<style>.stApp { background-color: white !important; color: black !important; }</style>", unsafe_allow_html=True)
-        info_placeholder.empty()
-        st.balloons()
+        # Mostrar información del video
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.image(thumbnail, use_container_width=True)
+        with col2:
+            st.subheader(title)
+            st.info(f"Duración total: {duration} segundos")
 
-        # --- INTENTO DE DESCARGA REAL ---
-        with st.spinner("Intentando bypass..."):
-            ydl_opts = {
-                'format': 'best[ext=mp4]',
-                'outtmpl': 'video.mp4',
-                'quiet': True,
-                'no_warnings': True,
-            }
+        st.divider()
 
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url])
+        # --- SECCIÓN DE RECORTE ---
+        st.subheader("Configura tu recorte")
+        start_time = st.number_input("Segundo de inicio:", min_value=0, max_value=int(duration), value=0)
+        end_time = st.number_input("Segundo de fin:", min_value=1, max_value=int(duration), value=int(duration))
+
+        if start_time >= end_time:
+            st.error("El tiempo de inicio debe ser menor al de fin.")
+        else:
+            if st.button("PROCESAR Y DESCARGAR"):
+                output_filename = "video_recortado.mp4"
                 
-                with open("video.mp4", "rb") as file:
-                    st.download_button("⬇️ GUARDAR VIDEO", file, "video.mp4")
-            
-            except Exception:
-                # --- PLAN B: SI TIKTOK BLOQUEA, MANDAMOS AL MOTOR PESADO ---
-                st.warning("⚠️ El servidor principal está saturado por seguridad.")
-                st.write("Tocá el botón de abajo para usar el **Servidor de Respaldo**:")
-                
-                # Creamos un link a Cobalt.tools que ya tiene el link pegado
-                # Esto es infalible porque Cobalt no lo bloquean
-                link_respaldo = f"https://cobalt.tools/?u={url}"
-                
-                st.markdown(f"""
-                    <a href="{link_respaldo}" target="_blank">
-                        <button style="width:100%; border-radius:20px; height:3.5em; background-color:#4CAF50; color:white; border:none; font-weight:bold; cursor:pointer;">
-                            🚀 USAR SERVIDOR DE RESPALDO
-                        </button>
-                    </a>
-                """, unsafe_allow_html=True)
-                st.info("Al entrar, dale al botón de la flecha y listo.")
-    else:
-        st.warning("Falta el link.")
-
+                # Configuración para descargar solo el fragmento
+                ydl_opts = {
+                    'format': 'best[ext=mp4]',
+                    'outtmpl': output_filename,
+                    'quiet':
 
 
 
